@@ -1,18 +1,21 @@
 from conectar import crear_conexion
 from dao.marca_dao import MarcaDAO
 from model.marca import Marca
+from model.repuesto import Repuesto
+from servicios.miinidicador import MiIndicador
 import sys
 
 def menu():
     print("\n" + "="*30)
-    print("   MANTENEDOR DE MARCAS")
+    print("   MANTENEDOR DE MARCAS Y REPUESTOS")
     print("="*30)
     print("1. Crear una Marca")
     print("2. Listar todas las Marcas")
     print("3. Buscar una Marca por ID")
     print("4. Actualizar una Marca")
     print("5. Eliminar una Marca")
-    print("6. Salir")
+    print("6. Cotizar Repuesto")
+    print("7. Salir")
     print("="*30)
     return input("Seleccione una opción: ")
 
@@ -110,12 +113,45 @@ def main():
                 print("❌ Por favor, ingrese un ID numérico válido.")
 
         elif opcion == '6':
+            print("\n--- COTIZAR REPUESTO ---")
+            codigo = input("Ingrese el código del repuesto: ").strip()
+            nombre = input("Ingrese el nombre del repuesto: ").strip()
+            try:
+                precio = float(input("Ingrese el precio del repuesto en origen: "))
+            except ValueError:
+                print("❌ Precio inválido.")
+                continue
+
+            es_importado = input("¿El repuesto es importado? (S/N): ").strip().upper() == 'S'
+            
+            # Instanciar el repuesto (asumimos un stock ficticio de 1 para este ejemplo)
+            repuesto = Repuesto(codigo, nombre, 1, es_importado, precio)
+            
+            print("Consultando el valor del dólar actual...")
+            try:
+                servicio = MiIndicador()
+                dolar_hoy = servicio.valor_hoy("dolar")
+                print(f"Valor del dólar hoy: ${dolar_hoy}")
+                
+                precio_final = repuesto.precio_en_pesos(dolar_hoy)
+                
+                print("\n--- RESUMEN COTIZACIÓN ---")
+                print(f"Repuesto: {repuesto.nombre} (Cod: {repuesto.codigo})")
+                print(f"Importado: {'Sí' if repuesto.es_importado else 'No'}")
+                print(f"Precio Base: {precio}")
+                print(f"Precio Final en Pesos: ${precio_final}")
+                print("--------------------------")
+                
+            except Exception as e:
+                print(f"❌ Error al consultar la API o calcular el precio: {e}")
+
+        elif opcion == '7':
             print("\nCerrando sistema... ¡Hasta luego!")
             conexion.close()
             break
             
         else:
-            print("\n❌ Opción no válida. Por favor, seleccione una opción del 1 al 6.")
+            print("\n❌ Opción no válida. Por favor, seleccione una opción del 1 al 7.")
 
 if __name__ == "__main__":
     main()
